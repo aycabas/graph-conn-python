@@ -2,9 +2,11 @@ import asyncio
 import configparser
 import json
 from graph import Graph
+import requests
+import json
 
 async def main():
-    print('Python Graph Tutorial\n')
+    print('Python Graph Connector\n')
 
     # Load settings
     config = configparser.ConfigParser()
@@ -23,9 +25,7 @@ async def main():
         print('0. Exit')
         print('1. Create External Connection')
         print('2. Create Schema')
-        print('3. Get External Connection')
-        print('4. List External Connections')
-        print('5. Delete External Connection')
+        print('3. Load GitHub Repositories')
         try:
             choice = int(input())
         except ValueError:
@@ -41,16 +41,18 @@ async def main():
                 await graph.create_schema(connectionId)
             elif choice == 3:
                 connectionId = input("Please enter the connection id: ")
-                await graph.get_connection(connectionId)
-            elif choice == 4:
-                await graph.list_connections()
-            elif choice == 5:
-                connectionId = input("Please enter the connection id: ")
-                await graph.delete_connection(connectionId)
+                username = input("Please enter your GitHub username: ")
+                repos = github_repos(username)
+                await graph.create_items(connectionId, repos)
             else:
                 print('Invalid choice!\n')
         except Exception as ex:
             print('Error:', ex, '\n')
 
+def github_repos(username):
+        data = {"type": "all", "sort":"full_name", "direction": "asc"}
+        output = requests.get("https://api.github.com/users/{}/repos".format(username), data=json.dumps(data))
+        output = json.loads(output.text)
+        return output
 # Run main
 asyncio.run(main())
